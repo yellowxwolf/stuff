@@ -1,0 +1,40 @@
+$date = get-date
+
+$hostname = $env:COMPUTERNAME
+
+$users = Get-LocalUser | Select-Object Name | Format-Table
+
+$group = Get-LocalGroup | Select-Object Name | Format-Table
+
+$loggedusers = Get-CimInstance win32_loggedonuser | Select-Object antecedent
+
+$processes = Get-Process | Select-Object Name | Format-table
+
+$services = Get-Service | Select-Object name,Status
+
+$Networkinfo = Get-NetAdapter | Format-Table
+
+$listening = Get-NetTCPConnection | Where-Object state -eq "listen" | Select-Object Localaddress,localport,remoteaddress,remoteport,state,owningprocess | format-list
+
+##would like to implement as some point/////(Get-ComputerInfo).psobject.properties.value
+
+$systeminfo = Get-ComputerInfo | Select-Object WindowsBuildLabEx,WindowsCurrentVersion,WindowsEditionId,WindowsInstallationType,WindowsInstallDateFromRegistry,WindowsProductId,WindowsProductName,WindowsVersion,OsArchitecture,CsDomain,BiosSMBIOSBIOSVersion
+
+$mappeddrives = Get-PSDrive | Select-Object Name,provider,root
+
+$PNP = Get-PnpDevice | Select-Object FriendlyName,Class,Status
+
+$shared = Get-CimInstance win32_share
+
+$scheduled = Get-ScheduledTask | Select-Object taskname,Taskpath,State
+
+Write-Output "###DATE###",$date,"###HOSTNAME###",$hostname,
+"###USERS###",$users,"###GROUPS###",$group,"###LOGGED USERS###",$loggedusers,
+"###PROCESSES###",$processes,"###SERVICES###",$services,"###NETWORKINFO###",$Networkinfo,"###LISTENING NETWORKS###",$listening,
+"###SYSTEN INFO###",$systeminfo,"###MAPPED DRIVES###",$mappeddrives,"###PLUG AND PLAY###",$PNP,"###SHARED RESOURCES###",$shared,"###SCHEDULED TASKS###",$scheduled | 
+out-file C:\Users\"$env:USERNAME"\Desktop\ExerciseCheck.txt
+
+$baseline = Read-Host "Enter your baseline filepath"
+$check = Read-Host "Enter your new scans filepath"
+
+Compare-Object -ReferenceObject (get-content (Read-Host "Enter your baseline filepath") -erroraction SilentlyContinue) -DifferenceObject (Get-Content (Read-Host "Enter your new scans filepath") -ErrorAction SilentlyContinue) | Out-File C:\Users\$env:username\desktop\Anamoly.txt
